@@ -1,68 +1,59 @@
 export const data = [
   {
     status: "fill",
-    id: 1,
+    itemID: 50,
     img: "http://34.117.99.224/serverassets/items/50.png",
   },
   {
     status: "fill",
-    id: 2,
+    itemID: 49,
     img: "http://34.117.99.224/serverassets/items/49.png",
+    amount: 30,
+    maxAmount: 40,
   },
   {
     status: "fill",
-    id: 3,
+    itemID: 4,
     img: "http://34.117.99.224/serverassets/items/4.png",
+    amount: 20,
+    maxAmount: 35,
   },
   {
     status: "fill",
-    id: 4,
+    itemID: 2,
     img: "http://34.117.99.224/serverassets/items/2.png",
-  },
-  {
-    status: "open",
-    id: 5,
-  },
-  {
-    status: "open",
-    id: 6,
-  },
-  {
-    status: "open",
-    id: 7,
+    amount: 1,
+    maxAmount: 5,
   },
 ];
 export const data2 = [
   {
     status: "fill",
-    id: 11,
+    itemID: 50,
     img: "http://34.117.99.224/serverassets/items/50.png",
   },
   {
     status: "fill",
-    id: 12,
+    itemID: 49,
     img: "http://34.117.99.224/serverassets/items/49.png",
+    amount: 5,
+    maxAmount: 25,
   },
   {
     status: "fill",
-    id: 13,
+    itemID: 4,
     img: "http://34.117.99.224/serverassets/items/4.png",
+    amount: 1,
+    maxAmount: 10,
   },
   {
     status: "fill",
-    id: 14,
+    itemID: 2,
     img: "http://34.117.99.224/serverassets/items/2.png",
-  },
-  {
-    status: "open",
-    id: 15,
-  },
-  {
-    status: "open",
-    id: 16,
-  },
-  {
-    status: "open",
-    id: 17,
+    amount: 2,
+    maxAmount: 4,
   },
 ];
+
+export const totalOpenCeil = 10;
+export const totalCloseCeil = 5;

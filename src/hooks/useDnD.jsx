@@ -4,8 +4,8 @@ const useDnD = (scale, responseCallback, transformDragMode = true) => {
   const isMouseDown = useRef(false);
   const draggableItemRef = useRef(null);
   const hoverItemRef = useRef(null);
-  const offSetTop = useRef();
-  const offSetLeft = useRef();
+  const offSetTop = useRef(null);
+  const offSetLeft = useRef(null);
 
   const onMouseDown = (e) => {
     isMouseDown.current = true;
@@ -21,11 +21,13 @@ const useDnD = (scale, responseCallback, transformDragMode = true) => {
 
     if (!transformDragMode) {
       draggableItemRef.current.style.position = "absolute";
+      draggableItemRef.current.style.zIndex = "101";
     }
     draggableItemRef.current.style.pointerEvents = "none";
+    draggableItemRef.current.style.zIndex = "101";
   };
 
-  const onMouseUp = (e) => {
+  const onMouseUp = (e, isCanceled) => {
     isMouseDown.current = false;
 
     const draggableItem = draggableItemRef.current;
@@ -33,9 +35,14 @@ const useDnD = (scale, responseCallback, transformDragMode = true) => {
 
     if (!draggableItem) return;
 
-    const result = swapItemInDOM(hoverItem, draggableItem);
-
-    responseCallback(result);
+    if (isCanceled || !e.target.dataset.droppable) {
+      responseCallback({ cancel: true });
+    } else if (!hoverItem && e.target.dataset.droppable === "true") {
+      responseCallback({ drop: true });
+    } else {
+      const result = swapItemInDOM(hoverItem, draggableItem);
+      responseCallback(result);
+    }
 
     // dataAttr.forEach((nodeContainer, index) => {
     //   nodeContainer.childNodes.forEach((ceil) => {
@@ -54,6 +61,7 @@ const useDnD = (scale, responseCallback, transformDragMode = true) => {
     draggableItemRef.current.style.top = "unset";
     draggableItemRef.current.style.left = "unset";
     draggableItem.style.transform = "none";
+    draggableItemRef.current.style.zIndex = "100";
 
     hoverItemRef.current = null;
     draggableItemRef.current = null;
@@ -88,7 +96,6 @@ const useDnD = (scale, responseCallback, transformDragMode = true) => {
     const node = e.target;
     if (!isMouseDown.current) return;
     if (node.dataset === "close") return;
-
     hoverItemRef.current = node;
   };
 
@@ -99,16 +106,23 @@ const useDnD = (scale, responseCallback, transformDragMode = true) => {
   function swapItemInDOM(node1, node2) {
     if (!node1 || !node2) return;
 
-    const afterNode2 = node2.nextElementSibling;
-    const parent = node2.parentNode;
-    node1.replaceWith(node2);
-    parent.insertBefore(node1, afterNode2);
+    // const afterNode2 = node2.nextElementSibling;
+    // const parent = node2.parentNode;
+    // node1.replaceWith(node2);
+    // parent.insertBefore(node1, afterNode2);
+
+    // const startIndex = node2.parentNode.parentNode.findIndex
 
     const obj = {
-      startDestination: node1.parentNode.parentNode.dataset.name,
-      startIndex: node1.id,
-      endDestination: node2.parentNode.parentNode.dataset.name,
-      endIndex: node2.id,
+      startDestination: node2.parentNode.parentNode.dataset.name,
+      endDestination: node1.parentNode.parentNode.dataset.name,
+      startID: node2.dataset.id,
+      endID: node1.dataset.id,
+      startUniqueID: node2.id,
+      endUniqueID: node1.id,
+      startIndex: node2.dataset.index,
+      endIndex: node1.dataset.index,
+      stack: node1.dataset.amount && true,
     };
 
     return obj;
