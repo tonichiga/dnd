@@ -2,14 +2,30 @@ import { useState, useReducer, useEffect } from "react";
 import "./App.css";
 import useDnD from "./hooks/useDnD";
 import { useZoom } from "react-easy-hooks";
-import { Main, Additional, Container, Modal } from "./components";
-import { data, data2, totalCloseCeil, totalOpenCeil } from "./data";
-import { v4 as uuidv4 } from "uuid";
+import { Main, Additional, Container, Modal, Hotkeys } from "./components";
+import {
+  data,
+  data2,
+  hotkeysData,
+  totalCloseCeil,
+  totalOpenCeil,
+  hotkeysTotalOpenCeil,
+  hotkeysTotalCloseCeil,
+} from "./data";
 import { arrayGenerator } from "./helpers/generator";
+import {
+  amountDecrement,
+  swapping,
+  findItem,
+  amountSplit,
+  compareDestinationRules,
+  compareSwapRules,
+} from "./helpers/services";
 
 function App() {
   const [main, dispatchMainItems] = useReducer(reducer, []);
   const [additional, dispatchAdditionalItems] = useReducer(reducer, []);
+  const [hotkeys, dispatchHotkeysItems] = useReducer(reducer, []);
 
   const [isOpenModal, setIsOpenModal] = useState(false);
   const [modalData, setModalData] = useState(false);
@@ -43,6 +59,12 @@ function App() {
         openCeils: totalOpenCeil,
         closeCeils: totalCloseCeil,
       },
+      {
+        name: "hotkeys",
+        data: hotkeysData,
+        openCeils: hotkeysTotalOpenCeil,
+        closeCeils: hotkeysTotalCloseCeil,
+      },
     ];
 
     const arraysData = arrayGenerator(options);
@@ -52,25 +74,36 @@ function App() {
       payload: arraysData.additional,
       type: "setItems",
     });
+    dispatchHotkeysItems({
+      payload: arraysData.hotkeys,
+      type: "setItems",
+    });
   }, []);
 
+  /* Main inventory logic **/
   function swapHanlder(result) {
     const mainCopy = [...main];
     const additionalCopy = [...additional];
-    const arrayData = { main: mainCopy, additional: additionalCopy };
+    const hotkeysCopy = [...hotkeys];
+
+    let arrayData = {
+      main: mainCopy,
+      additional: additionalCopy,
+      hotkeys: hotkeysCopy,
+    };
 
     const {
       cancel,
       drop,
       startID,
       endID,
-      startUniqueID,
-      endUniqueID,
       startDestination,
       endDestination,
-      startIndex: startIdx,
-      endIndex: endIdx,
+      startIndex,
+      endIndex,
       stack,
+      endElementDataset,
+      startElementDataset,
     } = result;
 
     if (cancel || drop) {
@@ -78,51 +111,43 @@ function App() {
       return;
     }
 
-    if (startID === endID && stack) {
-      let startItem = arrayData[startDestination][startIdx];
-      let endItem = arrayData[endDestination][endIdx];
+    // if (!compareDestinationRules(endDestination, endElementDataset.type)) {
+    //   console.log("Swap is not allowed");
+    //   return;
+    // }
 
+    // if (!compareSwapRules(startElementDataset.type, "hotkeyAllowed")) {
+    //   console.log("Swap rules is not allowed");
+    //   return;
+    // }
+
+    if (startID === endID && stack) {
       setIsOpenModal(true);
       setModalData({
-        startItemAmount: startItem.amount,
-        startItemMaxAmount: startItem.maxAmount,
-        endItemAmount: endItem.amount,
-        endItemMaxAmount: endItem.maxAmount,
+        action: "stack",
+        startItemAmount: arrayData[startDestination][startIndex].amount,
+        startItemMaxAmount: arrayData[startDestination][startIndex].maxAmount,
+        endItemAmount: arrayData[endDestination][endIndex].amount,
+        endItemMaxAmount: arrayData[endDestination][endIndex].maxAmount,
         startDestination,
         endDestination,
-        startIdx,
-        endIdx,
+        startIndex,
+        endIndex,
       });
 
       return;
     }
 
-    let buffer;
-
-    // console.log("Result :", result);
-    // console.log("Start array: ", arrays[result.startDestination]);
-    // console.log("Start ID: ", result.startID);
-    // console.log("End ID: ", result.endID);
-    // console.log("End array: ", arrays[result.endDestination]);
-
-    const startIndex = arrayData[startDestination].findIndex((el) => {
-      return el.id === startUniqueID;
-    });
-    const endIndex = arrayData[endDestination].findIndex((el) => {
-      return el.id === endUniqueID;
-    });
-
-    buffer = arrayData[startDestination][startIndex];
-
-    arrayData[startDestination][startIndex] =
-      arrayData[endDestination][endIndex];
-
-    arrayData[endDestination][endIndex] = buffer;
+    arrayData = swapping(arrayData, result);
 
     dispatchMainItems({ type: "setItems", payload: arrayData["main"] });
     dispatchAdditionalItems({
       type: "setItems",
       payload: arrayData["additional"],
+    });
+    dispatchHotkeysItems({
+      payload: arrayData["hotkeys"],
+      type: "setItems",
     });
   }
 
@@ -136,31 +161,55 @@ function App() {
   };
 
   const handleMouseDown = (e) => {
+    if (e.button !== 0) return;
     onMouseDown(e);
   };
 
-  const handleSubmitStack = (count, response) => {
-    const { startDestination, endDestination, startIdx, endIdx } = response;
-    let arrayData = { main, additional };
+  const handleContextMenu = (e) => {
+    e.preventDefault();
+    let arrays = { main, additional, hotkeys };
+    const id = e.target.id;
+    const arrayName = e.target.parentNode.parentNode.dataset.name;
 
-    arrayData[startDestination][startIdx].amount =
-      arrayData[startDestination][startIdx].amount - count;
-    arrayData[endDestination][endIdx].amount =
-      arrayData[endDestination][endIdx].amount + count;
+    const item = findItem(id, arrays[arrayName]);
+    const index = arrays[arrayName].findIndex((el) => el.id === item.id);
 
-    if (arrayData[startDestination][startIdx].amount === 0) {
-      arrayData[startDestination] = arrayData[startDestination].map((el) => {
-        if (el.id === arrayData[startDestination][startIdx].id) {
-          return { id: uuidv4(), status: "open" };
-        }
-        return el;
-      });
+    if (item.amount <= 1) return;
+    setIsOpenModal(true);
+    setModalData({
+      action: "split",
+      ...item,
+      amount: item.amount,
+      maxAmount: item.maxAmount,
+      arrayName,
+      index,
+    });
+  };
+
+  const handleSubmitStack = (count, params) => {
+    let arrayData = { main, additional, hotkeys };
+
+    if (params.action === "stack") {
+      arrayData = amountDecrement(arrayData, count, params);
+    }
+
+    if (params.action === "split") {
+      const resultArray = amountSplit(
+        arrayData[params.arrayName],
+        count,
+        params
+      );
+      arrayData[params.arrayName] = resultArray;
     }
 
     dispatchMainItems({ type: "setItems", payload: arrayData["main"] });
     dispatchAdditionalItems({
       type: "setItems",
       payload: arrayData["additional"],
+    });
+    dispatchHotkeysItems({
+      payload: arrayData["hotkeys"],
+      type: "setItems",
     });
   };
 
@@ -185,10 +234,12 @@ function App() {
             onMouseDown={handleMouseDown}
             onMouseEnter={onMouseEnter}
             onMouseLeave={onMouseLeave}
+            onContextMenu={handleContextMenu}
             zoom={zoom}
           >
             <Main data={main} />
             <Additional data={additional} />
+            <Hotkeys data={hotkeys} />
           </Container>
         </div>
       </div>

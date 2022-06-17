@@ -9,13 +9,17 @@ const Modal = ({ data, onClose, onSubmit }) => {
 
   const maxAmount = useMemo(() => {
     let max;
-    const { startItemAmount, endItemAmount, endItemMaxAmount } = data;
 
-    max = endItemMaxAmount - endItemAmount;
-    if (max > startItemAmount) {
-      max = startItemAmount;
+    if (data.action === "stack") {
+      const { startItemAmount, endItemAmount, endItemMaxAmount } = data;
+
+      max = endItemMaxAmount - endItemAmount;
+      if (max > startItemAmount) {
+        max = startItemAmount;
+      }
+    } else if (data.action === "split") {
+      max = data.amount - 1;
     }
-
     return max;
   }, [data]);
 

@@ -1,16 +1,16 @@
 import { Ceil } from "../";
 
-const Additional = ({
+const Hotkeys = ({
   onMouseDown,
   onMouseEnter,
   onMouseLeave,
   onContextMenu,
-  data,
   zoom,
+  data,
 }) => {
   return (
-    <div className="container__wrapper" style={zoom}>
-      <div className="container" data-name="additional">
+    <div className="container__wrapper hotkey" style={zoom}>
+      <div className="container" data-name="hotkeys">
         {data.map((el, index) => {
           let bgStyle = { width: 50, height: 50, zIndex: 100 };
 
@@ -53,4 +53,4 @@ const Additional = ({
   );
 };
 
-export default Additional;
+export default Hotkeys;

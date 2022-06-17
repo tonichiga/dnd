@@ -123,6 +123,8 @@ const useDnD = (scale, responseCallback, transformDragMode = true) => {
       startIndex: node2.dataset.index,
       endIndex: node1.dataset.index,
       stack: node1.dataset.amount && true,
+      endElementDataset: node1.dataset,
+      startElementDataset: node2.dataset,
     };
 
     return obj;

@@ -44,6 +44,7 @@
 
 .App {
   text-align: center;
+  flex-wrap: wrap;
 }
 
 .container__wrapper {
@@ -52,7 +53,18 @@
   background: #10030360;
   padding: 10px;
   border-radius: 8px;
-  zoom: 1.2;
+}
+
+.container__wrapper.hotkey {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 410px;
+  height: 70px;
+  background: #10030360;
+  padding: 10px;
+  border-radius: 8px;
+  margin-top: 10px;
 }
 
 .container__wrapper:not(:last-child) {
