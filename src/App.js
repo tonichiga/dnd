@@ -2,7 +2,14 @@ import { useState, useReducer, useEffect } from "react";
 import "./App.css";
 import useDnD from "./hooks/useDnD";
 import { useZoom } from "react-easy-hooks";
-import { Main, Additional, Container, Modal, Hotkeys } from "./components";
+import {
+  Main,
+  Additional,
+  Container,
+  Modal,
+  Hotkeys,
+  Clothes,
+} from "./components";
 import {
   data,
   data2,
@@ -11,6 +18,10 @@ import {
   totalOpenCeil,
   hotkeysTotalOpenCeil,
   hotkeysTotalCloseCeil,
+  clothesData,
+  clothesTotalOpenCeil,
+  clothesTotalCloseCeil,
+  typeRules,
 } from "./data";
 import { arrayGenerator } from "./helpers/generator";
 import {
@@ -26,6 +37,7 @@ function App() {
   const [main, dispatchMainItems] = useReducer(reducer, []);
   const [additional, dispatchAdditionalItems] = useReducer(reducer, []);
   const [hotkeys, dispatchHotkeysItems] = useReducer(reducer, []);
+  const [clothes, dispatchClothesItems] = useReducer(reducer, []);
 
   const [isOpenModal, setIsOpenModal] = useState(false);
   const [modalData, setModalData] = useState(false);
@@ -65,6 +77,12 @@ function App() {
         openCeils: hotkeysTotalOpenCeil,
         closeCeils: hotkeysTotalCloseCeil,
       },
+      {
+        name: "clothes",
+        data: clothesData,
+        openCeils: clothesTotalOpenCeil,
+        closeCeils: clothesTotalCloseCeil,
+      },
     ];
 
     const arraysData = arrayGenerator(options);
@@ -78,6 +96,10 @@ function App() {
       payload: arraysData.hotkeys,
       type: "setItems",
     });
+    dispatchClothesItems({
+      payload: arraysData.clothes,
+      type: "setItems",
+    });
   }, []);
 
   /* Main inventory logic **/
@@ -85,11 +107,13 @@ function App() {
     const mainCopy = [...main];
     const additionalCopy = [...additional];
     const hotkeysCopy = [...hotkeys];
+    const clothesCopy = [...clothes];
 
     let arrayData = {
       main: mainCopy,
       additional: additionalCopy,
       hotkeys: hotkeysCopy,
+      clothes: clothesCopy,
     };
 
     const {
@@ -111,17 +135,44 @@ function App() {
       return;
     }
 
-    // if (!compareDestinationRules(endDestination, endElementDataset.type)) {
-    //   console.log("Swap is not allowed");
-    //   return;
-    // }
+    console.log({
+      startDestination,
+      endDestination,
+      startIndex,
+      endIndex,
+      stack,
+      endElementDataset,
+      startElementDataset,
+    });
 
-    // if (!compareSwapRules(startElementDataset.type, "hotkeyAllowed")) {
-    //   console.log("Swap rules is not allowed");
-    //   return;
-    // }
+    if (!typeRules[startElementDataset.type][endDestination]) return;
 
-    if (startID === endID && stack) {
+    if (typeRules[endElementDataset.type]) {
+      console.log({
+        startType: startElementDataset.type,
+        endType: endElementDataset.type,
+        startItem: typeRules[startElementDataset.type],
+        endItem: typeRules[endElementDataset.type],
+      });
+      if (
+        !typeRules[startElementDataset.type][endDestination] ||
+        !typeRules[endElementDataset.type][startDestination]
+      ) {
+        return;
+      }
+    }
+
+    if ((startID === endID && stack) || false) {
+      // if (!compareDestinationRules(endDestination, endElementDataset.type)) {
+      //   console.log("Swap is not allowed");
+      //   return;
+      // }
+
+      // if (!compareSwapRules(startElementDataset.type, "hotkeyAllowed")) {
+      //   console.log("Swap rules is not allowed");
+      //   return;
+      // }
+
       setIsOpenModal(true);
       setModalData({
         action: "stack",
@@ -149,6 +200,10 @@ function App() {
       payload: arrayData["hotkeys"],
       type: "setItems",
     });
+    dispatchClothesItems({
+      payload: arrayData["clothes"],
+      type: "setItems",
+    });
   }
 
   const handleMouseUp = (e) => {
@@ -167,11 +222,14 @@ function App() {
 
   const handleContextMenu = (e) => {
     e.preventDefault();
-    let arrays = { main, additional, hotkeys };
+    let arrays = { main, additional, hotkeys, clothes };
     const id = e.target.id;
     const arrayName = e.target.parentNode.parentNode.dataset.name;
 
     const item = findItem(id, arrays[arrayName]);
+
+    if (item.status !== "fill") return;
+
     const index = arrays[arrayName].findIndex((el) => el.id === item.id);
 
     if (item.amount <= 1) return;
@@ -187,7 +245,7 @@ function App() {
   };
 
   const handleSubmitStack = (count, params) => {
-    let arrayData = { main, additional, hotkeys };
+    let arrayData = { main, additional, hotkeys, clothes };
 
     if (params.action === "stack") {
       arrayData = amountDecrement(arrayData, count, params);
@@ -209,6 +267,10 @@ function App() {
     });
     dispatchHotkeysItems({
       payload: arrayData["hotkeys"],
+      type: "setItems",
+    });
+    dispatchClothesItems({
+      payload: arrayData["clothes"],
       type: "setItems",
     });
   };
@@ -237,6 +299,7 @@ function App() {
             onContextMenu={handleContextMenu}
             zoom={zoom}
           >
+            <Clothes data={clothes} />
             <Main data={main} />
             <Additional data={additional} />
             <Hotkeys data={hotkeys} />

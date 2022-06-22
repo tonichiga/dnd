@@ -96,6 +96,8 @@ export const data2 = [
   },
 ];
 
+export const clothesData = [];
+
 export const hotkeysData = [];
 
 export const ALLOWED_LIST = {
@@ -201,3 +203,5 @@ export const totalOpenCeil = 10;
 export const totalCloseCeil = 5;
 export const hotkeysTotalOpenCeil = 6;
 export const hotkeysTotalCloseCeil = 0;
+export const clothesTotalOpenCeil = 8;
+export const clothesTotalCloseCeil = 0;

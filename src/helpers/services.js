@@ -17,6 +17,7 @@ const findItem = (entryID, items) => {
 const swapping = (arrays, params) => {
   const { startUniqueID, endUniqueID, startDestination, endDestination } =
     params;
+
   let buffer;
 
   const startIndex = arrays[startDestination].findIndex((el) => {

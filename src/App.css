@@ -67,6 +67,11 @@
   margin-top: 10px;
 }
 
+.container__wrapper.clothes .container > div:nth-child(odd) {
+  margin-right: calc(100% - 133px);
+  margin-bottom: 30px;
+}
+
 .container__wrapper:not(:last-child) {
   margin-right: 10px;
 }
@@ -88,7 +93,7 @@
   height: 60px;
   border: solid 2px transparent;
   border-radius: 8px;
-  transition: 150ms ease-in-out;
+  transition: 150ms border ease-in-out;
 }
 .ceil:hover {
   border-color: #2d08a7;
